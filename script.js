@@ -1,3 +1,4 @@
+// 1) defina a base do seu Worker
 const WORKER_BASE = "https://copy-relay.cysneirostiago.workers.dev";
 
 document.getElementById("gen").addEventListener("click", async () => {
@@ -6,15 +7,16 @@ document.getElementById("gen").addEventListener("click", async () => {
   btn.disabled = true;
   out.textContent = "Gerando…";
 
-  // chamada ao Worker
-  const r = await fetch(WORKER_BASE + "/register", { method: "POST" });
-  if (!r.ok) {
-    out.textContent = "Erro 😢";
+  try {
+    // 2) chame o endpoint correto do Worker
+    const r = await fetch(`${WORKER_BASE}/register`, { method: "POST" });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const { master_key } = await r.json();
+    out.textContent = "Sua MasterKey: " + master_key;
+  } catch (err) {
+    console.error(err);
+    out.textContent = "Erro ao gerar 😢";
+  } finally {
     btn.disabled = false;
-    return;
   }
-
-  const { master_key } = await r.json();
-  out.textContent = "Sua MasterKey: " + master_key;
-  btn.disabled = false;
 });
