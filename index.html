@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Copy‑Trader – Gerar MasterKey</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="card">
+      <!-- logo -->
+      <img src="img/logo.png" alt="Logo" class="logo" />
+
+      <!-- gerador -->
+      <h2>Gerar sua MasterKey</h2>
+      <button id="gen" class="btn">Gerar</button>
+      <p id="out"></p>
+
+      <!-- link de whitelist -->
+      <div class="whitelist">
+        <label for="wl-link">Endereço para WebRequest:</label>
+        <input id="wl-link" type="text" readonly
+               value="https://copy-relay.cysneirostiago.workers.dev"
+        />
+        <small>Copie e cole em Ferramentas &gt; Opções &gt; Expert Advisors &gt; WebRequest</small>
+      </div>
+
+      <!-- downloads -->
+      <div class="downloads">
+        <a href="ea/copyMaster.ex4" download class="btn dl">Baixar EA Master</a>
+        <a href="ea/copySlave.ex4"  download class="btn dl">Baixar EA Slave</a>
+      </div>
+
+      <!-- banner FBS -->
+      <a href="https://fbs.partners?ibl=936326&ibp=7209644" target="_blank">
+        <img src="img/fbs.jpg" alt="Abra sua conta FBS" class="banner" />
+      </a>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>
