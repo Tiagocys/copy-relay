@@ -8,12 +8,23 @@ const supabaseClient = window.supabase.createClient(
   SUPABASE_ANON,
   {
     auth: {
-      persistSession: true,
+      persistSession:   true,
       detectSessionInUrl: true,
       storage: window.localStorage
     }
   }
 );
+// debug rápido
+async function testeAuth() {
+  const { error: e1 } = await supabaseClient.auth.signUp({ email:"teste@supabase.io", password:"teste123" });
+  console.log("signup error?", e1);
+  const { error: e2 } = await supabaseClient.auth.signInWithPassword({ email:"teste@supabase.io", password:"teste123" });
+  console.log("signin error?", e2);
+}
+
+testeAuth();
+
+
 // dispara sempre que a sessão mudar (login, logout, refresh, retorno do OAuth)
 supabaseClient.auth.onAuthStateChange((_event, session) => {
   updateUI();
@@ -147,6 +158,7 @@ if (window.location.hash.includes("access_token")) {
   history.replaceState({}, "", window.location.pathname);
 }
 
+
 btnGenFree.onclick = async () => {
   btnGenFree.disabled = true;
   preFreeKey.textContent = "Carregando…";
@@ -179,5 +191,6 @@ btnGenFree.onclick = async () => {
 };
 
 supabaseClient.auth.onAuthStateChange(updateUI);
+
 
 updateUI();
