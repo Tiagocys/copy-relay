@@ -82,19 +82,34 @@ btnLogout.onclick = async () => {
 
 btnGenFree.onclick = async () => {
   btnGenFree.disabled = true;
-  preFreeKey.textContent = "Gerando…";
+  preFreeKey.textContent = "Carregando…";
 
-  const r = await fetch(`${RELAY_BASE}/register`, { method: "POST" });
-  if (!r.ok) {
-    preFreeKey.textContent = "Erro 😢";
+  // 1) obtem token do Supabase
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (!session) {
+    preFreeKey.textContent = "Faça login primeiro!";
     btnGenFree.disabled = false;
     return;
   }
-  const { master_key } = await r.json();
-  preFreeKey.textContent = master_key;
+  const token = session.access_token;
+
+  // 2) chama o Worker
+  const r = await fetch(`${RELAY_BASE}/registerfree`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    }
+  });
+
+  if (!r.ok) {
+    preFreeKey.textContent = "Erro 😢";
+  } else {
+    const { master_key } = await r.json();
+    preFreeKey.textContent = master_key;
+  }
   btnGenFree.disabled = false;
 };
-
 
 supabaseClient.auth.onAuthStateChange(updateUI);
 updateUI();
