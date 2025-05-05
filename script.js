@@ -1,19 +1,25 @@
+// URL do seu Worker
+const RELAY_BASE = "https://copy-relay.cysneirostiago.workers.dev";
 // Inicializa Supabase
 const SUPABASE_URL     = "https://cqfvcproocsxfmfuoreh.supabase.co";
 const SUPABASE_ANON    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNxZnZjcHJvb2NzeGZtZnVvcmVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY0NDQyNTEsImV4cCI6MjA2MjAyMDI1MX0.BafQl9JbqJSZmAPJIls5_v7uvYjB5xOBCA3QJoieLaQ";
 const supabaseClient = window.supabase.createClient(
-   SUPABASE_URL,
-   SUPABASE_ANON,
-   {
-     auth: {
-       persistSession: true,
-       detectSessionInUrl: true,
-       storage: window.localStorage
-     }
-   }
- );
-// URL do seu Worker
-const RELAY_BASE = "https://copy-relay.cysneirostiago.workers.dev";
+  SUPABASE_URL,
+  SUPABASE_ANON,
+  {
+    auth: {
+      persistSession: true,
+      detectSessionInUrl: true,
+      storage: window.localStorage
+    }
+  }
+);
+// dispara sempre que a sessão mudar (login, logout, refresh, retorno do OAuth)
+supabaseClient.auth.onAuthStateChange((_event, session) => {
+  updateUI();
+});
+
+
 
 
 const btnLogin   = document.getElementById("btn-login");
@@ -90,7 +96,7 @@ async function updateUI() {
 
   // 4) botão free: não mexe, o usuário clica se quiser
 }
-
+updateUI();
 
 btnLogin.onclick = () => {
   supabaseClient.auth.signInWithOAuth({
@@ -139,4 +145,4 @@ btnGenFree.onclick = async () => {
 };
 
 supabaseClient.auth.onAuthStateChange(updateUI);
-updateUI();
+
