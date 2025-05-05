@@ -1,6 +1,6 @@
 // Inicializa Supabase
-const SUPABASE_URL     = "<sua-SUPABASE_URL>";
-const SUPABASE_ANON    = "<sua-SUPABASE_ANON_KEY>";
+const SUPABASE_URL     = "https://cqfvcproocsxfmfuoreh.supabase.co";
+const SUPABASE_ANON    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNxZnZjcHJvb2NzeGZtZnVvcmVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY0NDQyNTEsImV4cCI6MjA2MjAyMDI1MX0.BafQl9JbqJSZmAPJIls5_v7uvYjB5xOBCA3QJoieLaQ";
 const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
 const btnLogin   = document.getElementById("btn-login");
