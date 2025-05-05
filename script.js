@@ -63,8 +63,15 @@ async function updateUI() {
 }
 
 btnLogin.onclick = () => {
-  supabase.auth.signInWithOAuth({ provider: "google" });
+  supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      // garante que o redirect volte para a sua Pages
+      redirectTo: window.location.origin
+    }
+  });
 };
+
 btnLogout.onclick = async () => {
   await supabase.auth.signOut();
   updateUI();
