@@ -1,7 +1,17 @@
 // Inicializa Supabase
 const SUPABASE_URL     = "https://cqfvcproocsxfmfuoreh.supabase.co";
 const SUPABASE_ANON    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNxZnZjcHJvb2NzeGZtZnVvcmVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY0NDQyNTEsImV4cCI6MjA2MjAyMDI1MX0.BafQl9JbqJSZmAPJIls5_v7uvYjB5xOBCA3QJoieLaQ";
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+const supabaseClient = window.supabase.createClient(
+   SUPABASE_URL,
+   SUPABASE_ANON,
+   {
+     auth: {
+       persistSession: true,
+       detectSessionInUrl: true,
+       storage: window.localStorage
+     }
+   }
+ );
 // URL do seu Worker
 const RELAY_BASE = "https://copy-relay.cysneirostiago.workers.dev";
 
