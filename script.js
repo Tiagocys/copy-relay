@@ -1,7 +1,7 @@
 // Inicializa Supabase
 const SUPABASE_URL     = "https://cqfvcproocsxfmfuoreh.supabase.co";
 const SUPABASE_ANON    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNxZnZjcHJvb2NzeGZtZnVvcmVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY0NDQyNTEsImV4cCI6MjA2MjAyMDI1MX0.BafQl9JbqJSZmAPJIls5_v7uvYjB5xOBCA3QJoieLaQ";
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
 const btnLogin   = document.getElementById("btn-login");
 const btnLogout  = document.getElementById("btn-logout");
@@ -16,7 +16,7 @@ const inpNew     = document.getElementById("new-login");
 const btnAdd     = document.getElementById("btn-add-login");
 
 async function updateUI() {
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { session } } = await supabaseClient.auth.getSession();
   if (!session) {
     btnLogin.hidden = false;
     btnLogout.hidden = true;
@@ -29,7 +29,7 @@ async function updateUI() {
 
   // busca licença
   const userId = session.user.id;
-  let { data: lics } = await supabase
+  let { data: lics } = await supabaseClient
     .from("licenses")
     .select("key,plan")
     .eq("user_id", userId);
@@ -46,7 +46,7 @@ async function updateUI() {
     elPaidKey.textContent = lic.key;
 
     // lista contas autorizadas
-    const { data: accts } = await supabase
+    const { data: accts } = await supabaseClient
       .from("accounts")
       .select("login")
       .eq("license_key", lic.key);
@@ -54,7 +54,7 @@ async function updateUI() {
 
     btnAdd.onclick = async () => {
       const login = Number(inpNew.value);
-      await supabase
+      await supabaseClient
         .from("accounts")
         .insert({ license_key: lic.key, login });
       updateUI(); // recarrega lista
@@ -63,7 +63,7 @@ async function updateUI() {
 }
 
 btnLogin.onclick = () => {
-  supabase.auth.signInWithOAuth({
+  supabaseClient.auth.signInWithOAuth({
     provider: "google",
     options: {
       // garante que o redirect volte para a sua Pages
@@ -73,7 +73,7 @@ btnLogin.onclick = () => {
 };
 
 btnLogout.onclick = async () => {
-  await supabase.auth.signOut();
+  await supabaseClient.auth.signOut();
   updateUI();
 };
 
@@ -83,5 +83,5 @@ btnGenFree.onclick = async () => {
   preFreeKey.textContent = master_key;
 };
 
-supabase.auth.onAuthStateChange(updateUI);
+supabaseClient.auth.onAuthStateChange(updateUI);
 updateUI();
