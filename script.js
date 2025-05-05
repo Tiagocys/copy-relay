@@ -19,11 +19,6 @@ supabaseClient.auth.onAuthStateChange((_event, session) => {
   updateUI();
 });
 
-
-
-
-const btnLogin   = document.getElementById("btn-login");
-const btnLogout  = document.getElementById("btn-logout");
 const app        = document.getElementById("app");
 const freeSec    = document.getElementById("free-section");
 const paidSec    = document.getElementById("paid-section");
@@ -34,11 +29,60 @@ const listAccts  = document.getElementById("accounts-list");
 const inpNew     = document.getElementById("new-login");
 const btnAdd     = document.getElementById("btn-add-login");
 
+// elementos de modal
+const modalLogin  = document.getElementById("modal-login");
+const modalSignup = document.getElementById("modal-signup");
+const btnLogin    = document.getElementById("btn-login");
+const btnSignup   = document.getElementById("btn-signup");
+const btnLogout   = document.getElementById("btn-logout");
+
+btnLogin.onclick = ()  => modalLogin.classList.remove("hidden");
+btnSignup.onclick = () => modalSignup.classList.remove("hidden");
+for (let btn of document.querySelectorAll(".close-modal"))
+  btn.onclick = () => { modalLogin.classList.add("hidden"); modalSignup.classList.add("hidden"); };
+
+// formulário de login email/senha
+document.getElementById("form-login").onsubmit = async e => {
+  e.preventDefault();
+  const email = document.getElementById("login-email").value;
+  const pass  = document.getElementById("login-pass").value;
+  const { error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
+  if (error) return alert("Erro ao entrar: " + error.message);
+  modalLogin.classList.add("hidden");
+};
+
+// formulário de cadastro
+document.getElementById("form-signup").onsubmit = async e => {
+  e.preventDefault();
+  const email = document.getElementById("signup-email").value;
+  const pass  = document.getElementById("signup-pass").value;
+  const { error } = await supabaseClient.auth.signUp({ email, password: pass });
+  if (error) return alert("Erro ao cadastrar: " + error.message);
+  alert("Verifique seu email (se habilitado) ou já faça login.");
+  modalSignup.classList.add("hidden");
+};
+
+// botão Google dentro do modal de login
+document.getElementById("btn-google-login").onclick = () => {
+  supabaseClient.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo: window.location.origin }
+  });
+};
+
+// logout
+btnLogout.onclick = async () => {
+  await supabaseClient.auth.signOut();
+  updateUI();
+};
+
+
 async function updateUI() {
   const { data:{ session } } = await supabaseClient.auth.getSession();
   if (!session) {
     // não logado
     btnLogin.hidden  = false;
+    btnSignup.hidden = false;
     btnLogout.hidden = true;
     app.hidden       = true;
     return;
@@ -46,6 +90,7 @@ async function updateUI() {
 
   // usuário logado
   btnLogin.hidden  = true;
+  btnSignup.hidden = true;
   btnLogout.hidden = false;
   app.hidden       = false;
 
@@ -96,28 +141,11 @@ async function updateUI() {
 
   // 4) botão free: não mexe, o usuário clica se quiser
 }
-updateUI();
 
 // Depois de extrair a sessão, limpe o hash da URL
 if (window.location.hash.includes("access_token")) {
   history.replaceState({}, "", window.location.pathname);
 }
-
-
-btnLogin.onclick = () => {
-  supabaseClient.auth.signInWithOAuth({
-    provider: "google",
-    options: {
-      // garante que o redirect volte para a sua Pages
-      redirectTo: window.location.origin
-    }
-  });
-};
-
-btnLogout.onclick = async () => {
-  await supabaseClient.auth.signOut();
-  updateUI();
-};
 
 btnGenFree.onclick = async () => {
   btnGenFree.disabled = true;
@@ -152,3 +180,4 @@ btnGenFree.onclick = async () => {
 
 supabaseClient.auth.onAuthStateChange(updateUI);
 
+updateUI();

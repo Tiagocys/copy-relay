@@ -10,9 +10,35 @@
 <body>
   <header>
     <h1>Copy Relay</h1>
-    <button id="btn-login">Entrar com Google</button>
+    <!-- Botões de entrar/cadastrar -->
+    <button id="btn-login">Entrar</button>
+    <button id="btn-signup">Cadastrar</button>
     <button id="btn-logout" hidden>Sair</button>
   </header>
+  
+  <!-- POP-UP LOGIN -->
+  <div id="modal-login" class="modal hidden">
+    <form id="form-login" class="modal-content">
+      <h2>Login</h2>
+      <input type="email" id="login-email" placeholder="Email" required>
+      <input type="password" id="login-pass" placeholder="Senha" required minlength="6">
+      <button type="submit">Entrar</button>
+      <hr>
+      <button type="button" id="btn-google-login">Entrar com Google</button>
+      <button type="button" class="close-modal">Cancelar</button>
+    </form>
+  </div>
+  
+  <!-- POP-UP SIGNUP -->
+  <div id="modal-signup" class="modal hidden">
+    <form id="form-signup" class="modal-content">
+      <h2>Cadastrar</h2>
+      <input type="email" id="signup-email" placeholder="Email" required>
+      <input type="password" id="signup-pass" placeholder="Senha" required minlength="6">
+      <button type="submit">Cadastrar</button>
+      <button type="button" class="close-modal">Cancelar</button>
+    </form>
+  </div>
 
   <main id="app" hidden>
     <section id="free-section" hidden>
