@@ -98,6 +98,12 @@ async function updateUI() {
 }
 updateUI();
 
+// Depois de extrair a sessão, limpe o hash da URL
+if (window.location.hash.includes("access_token")) {
+  history.replaceState({}, "", window.location.pathname);
+}
+
+
 btnLogin.onclick = () => {
   supabaseClient.auth.signInWithOAuth({
     provider: "google",
