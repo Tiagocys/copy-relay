@@ -2,6 +2,9 @@
 const SUPABASE_URL     = "https://cqfvcproocsxfmfuoreh.supabase.co";
 const SUPABASE_ANON    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNxZnZjcHJvb2NzeGZtZnVvcmVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY0NDQyNTEsImV4cCI6MjA2MjAyMDI1MX0.BafQl9JbqJSZmAPJIls5_v7uvYjB5xOBCA3QJoieLaQ";
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+// URL do seu Worker
+const RELAY_BASE = "https://copy-relay.cysneirostiago.workers.dev";
+
 
 const btnLogin   = document.getElementById("btn-login");
 const btnLogout  = document.getElementById("btn-logout");
@@ -78,10 +81,20 @@ btnLogout.onclick = async () => {
 };
 
 btnGenFree.onclick = async () => {
-  const r = await fetch("/register", { method: "POST" });
+  btnGenFree.disabled = true;
+  preFreeKey.textContent = "Gerando…";
+
+  const r = await fetch(`${RELAY_BASE}/register`, { method: "POST" });
+  if (!r.ok) {
+    preFreeKey.textContent = "Erro 😢";
+    btnGenFree.disabled = false;
+    return;
+  }
   const { master_key } = await r.json();
   preFreeKey.textContent = master_key;
+  btnGenFree.disabled = false;
 };
+
 
 supabaseClient.auth.onAuthStateChange(updateUI);
 updateUI();
