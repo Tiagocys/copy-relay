@@ -27,6 +27,10 @@ const SUPABASE_ANON    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
   async function criarCheckout(plan) {
     btnSubTrader.disabled = btnSubEnterprise.disabled = true;
     const { data:{ session } } = await supabaseClient.auth.getSession();
+    // 0) debug
+    console.log("DEBUG session", session);
+    console.log("DEBUG token ", session?.access_token);
+    // 0) debug
     if (!session) {
       alert("Faça login antes!");
       btnSubTrader.disabled = btnSubEnterprise.disabled = false;
