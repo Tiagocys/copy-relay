@@ -199,8 +199,10 @@ const SUPABASE_ANON    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
 
   // 10) Update UI
   async function updateUI() {
-    const { data:{ session } } = await supabaseClient.auth.getSession();
+    // 1) Resgata sessão
+    const { data: { session } } = await supabaseClient.auth.getSession();
     if (!session) {
+      // não logado
       btnLogin.hidden  = false;
       btnSignup.hidden = false;
       btnLogout.hidden = true;
@@ -214,53 +216,84 @@ const SUPABASE_ANON    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
     app.hidden       = false;
 
     const userId = session.user.id;
-    // 1) exibe sempre a seção de assinatura
-    subSec.hidden = false;
 
-    // paga?
-    let { data:lics } = await supabaseClient
+    // 2) Exibe sempre as seções
+    subSec.hidden   = false;
+    freeSec.hidden  = false;
+
+    // 3) Busca licenças TRADER e ENTERPRISE (qualquer status)
+    let { data: lics } = await supabaseClient
       .from("licenses")
-      .select("key,plan")
+      .select("key,plan,status")
       .eq("user_id", userId)
-      .eq("plan", "TRADER");
+      .in("plan", ["TRADER","ENTERPRISE"]);
 
-    freeSec.hidden = false;
-    const hasPaid  = lics.length > 0;
-    paidSec.hidden = !hasPaid;
+    // 4) Filtra somente as licenças ativas
+    const active = lics.filter(l => l.status === "active");
+    const hasTrader     = active.some(l => l.plan === "TRADER");
+    const hasEnterprise = active.some(l => l.plan === "ENTERPRISE");
+    const hasPaid       = hasTrader || hasEnterprise;
+
+    // 5) Esconde/exibe botões de assinatura
+    btnSubTrader.hidden     = hasTrader || hasEnterprise;
+    btnSubEnterprise.hidden = hasEnterprise;
+
+    // 6) Seção paga e cancelamento
+    paidSec.hidden      = !hasPaid;
     btnCancelSub.hidden = !hasPaid;
 
-
+    // 7) Exibe MasterKey e contas se houver pagamento ativo
     if (hasPaid) {
-      const lic = lics[0];
+      // prioriza Enterprise se existir
+      const lic = active.find(l => l.plan === "ENTERPRISE")
+                || active.find(l => l.plan === "TRADER");
       elPaidKey.textContent = lic.key;
-      let { data:accts } = await supabaseClient
+
+      // lista contas autorizadas
+      let { data: accts } = await supabaseClient
         .from("accounts")
         .select("login")
         .eq("license_key", lic.key);
       listAccts.innerHTML = accts.map(a => `<li>${a.login}</li>`).join("");
+
+      // adicionar conta
       btnAdd.onclick = async () => {
         const login = Number(inpNew.value);
         if (!login) return alert("Informe um número válido");
-        await supabaseClient.from("accounts").insert({ license_key: lic.key, login });
+        await supabaseClient
+          .from("accounts")
+          .insert({ license_key: lic.key, login });
         updateUI();
       };
+
+      // cancelar assinatura
       btnCancelSub.onclick = async () => {
-        if (!confirm("Deseja cancelar sua assinatura?")) return;
+        if (!confirm(
+          "Tem certeza de que deseja cancelar sua assinatura?\n" +
+          "Isso encerrará imediatamente o plano e marcará sua licença como 'canceled'."
+        )) return;
+        btnCancelSub.disabled = true;
         const { data:{ session } } = await supabaseClient.auth.getSession();
         const r = await fetch(`${RELAY_BASE}/cancel-subscription`, {
           method: "POST",
-          headers: {
-            "Authorization": `Bearer ${session.access_token}`
-          }
+          headers: { "Authorization": `Bearer ${session.access_token}` }
         });
-        if (!r.ok) return alert("Erro ao cancelar: "+await r.text());
+        if (!r.ok) {
+          alert("Erro ao cancelar: " + await r.text());
+          btnCancelSub.disabled = false;
+          return;
+        }
         alert("Assinatura cancelada!");
         updateUI();
       };
-      
+    } else {
+      // limpa caso não tenha licença ativa
+      elPaidKey.textContent = "";
+      listAccts.innerHTML   = "";
     }
   }
 
-  // 11) Chama uma vez
-  updateUI();
+// no carregamento inicial
+updateUI();
+
 });
