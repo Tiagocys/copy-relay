@@ -244,8 +244,11 @@ const SUPABASE_ANON    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
     // 7) Se tiver pagamento ativo, mostra os dados
     if (hasPaid) {
       // prioriza Enterprise
-      const lic = active.find(l => l.plan === "ENTERPRISE")
-                || active.find(l => l.plan === "TRADER");
+      // escolhe na ordem: ENTERPRISE → TRADER → qualquer outra (por fim, FREE)
+      const lic = licJs.find(l=>l.plan==="ENTERPRISE")
+      || licJs.find(l=>l.plan==="TRADER")
+      || licJs[0];
+
 
       elPaidKey.textContent = lic.key;
 
