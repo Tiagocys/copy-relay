@@ -199,66 +199,65 @@ const SUPABASE_ANON    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
 
   // 10) Update UI
   async function updateUI() {
-    // 1) Pega a sessão
+    // 1) pega sessão
     const { data:{ session } } = await supabaseClient.auth.getSession();
     if (!session) {
+      // não logado
       btnLogin.hidden  = false;
       btnSignup.hidden = false;
       btnLogout.hidden = true;
       app.hidden       = true;
       return;
     }
+  
     // usuário logado
     btnLogin.hidden  = true;
     btnSignup.hidden = true;
     btnLogout.hidden = false;
     app.hidden       = false;
-
+  
     const userId = session.user.id;
-
-    // 2) Seções sempre visíveis
+  
+    // seções sempre visíveis
     subSec.hidden   = false;
     freeSec.hidden  = false;
-
-    // 3) Busca TRADER e ENTERPRISE (qualquer status)
-    let { data:lics } = await supabaseClient
+  
+    // 2) busca todas as licenças do usuário
+    let { data: lics } = await supabaseClient
       .from("licenses")
       .select("key,plan,status")
       .eq("user_id", userId)
-      .in("plan", ["TRADER","ENTERPRISE"]);
-
-    // 4) Filtra somente licenças ativas
+      .in("plan", ["FREE","TRADER","ENTERPRISE"]);
+  
+    // 3) filtra somente licenças ativas
     const active = lics.filter(l => l.status === "active");
-    const hasTrader     = active.some(l => l.plan === "TRADER");
     const hasEnterprise = active.some(l => l.plan === "ENTERPRISE");
-    const hasPaid       = hasTrader || hasEnterprise;
-
-    // 5) Botões de assinatura
-    btnSubTrader.hidden     = hasTrader || hasEnterprise;
+    const hasTrader     = active.some(l => l.plan === "TRADER");
+    const hasPaid       = hasEnterprise || hasTrader;
+  
+    // 4) botões de assinatura
+    btnSubTrader.hidden     = hasTrader   || hasEnterprise;
     btnSubEnterprise.hidden = hasEnterprise;
-
-    // 6) Seção paga e cancel
+  
+    // 5) seção paga e cancel
     paidSec.hidden      = !hasPaid;
     btnCancelSub.hidden = !hasPaid;
-
-    // 7) Se tiver pagamento ativo, mostra os dados
+  
+    // 6) exibe chave e contas se tiver plano ativo
     if (hasPaid) {
       // prioriza Enterprise
-      // escolhe na ordem: ENTERPRISE → TRADER → qualquer outra (por fim, FREE)
-      const lic = licJs.find(l=>l.plan==="ENTERPRISE")
-      || licJs.find(l=>l.plan==="TRADER")
-      || licJs[0];
-
-
+      const lic = active.find(l => l.plan === "ENTERPRISE")
+                || active.find(l => l.plan === "TRADER");
+  
       elPaidKey.textContent = lic.key;
-
+  
       // lista contas
-      let { data:accts } = await supabaseClient
+      let { data: accts } = await supabaseClient
         .from("accounts")
         .select("login")
         .eq("license_key", lic.key);
       listAccts.innerHTML = accts.map(a => `<li>${a.login}</li>`).join("");
-
+  
       // adicionar conta
       btnAdd.onclick = async () => {
         const login = Number(inpNew.value);
@@ -268,11 +267,11 @@ const SUPABASE_ANON    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
           .insert({ license_key: lic.key, login });
         updateUI();
       };
-
+  
       // cancelar assinatura
       btnCancelSub.onclick = async () => {
         if (!confirm(
-          "Tem certeza?\nEssa ação encerrará imediatamente sua assinatura."
+          "Tem certeza? Essa ação encerrará imediatamente sua assinatura."
         )) return;
         btnCancelSub.disabled = true;
         const { data:{ session } } = await supabaseClient.auth.getSession();
@@ -288,13 +287,13 @@ const SUPABASE_ANON    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
         alert("Assinatura cancelada!");
         updateUI();
       };
-
+  
     } else {
-      // sem licença ativa: limpa dados
+      // sem licença ativa: limpa valores
       elPaidKey.textContent = "";
       listAccts.innerHTML   = "";
     }
-  }
+  }  
 
 // inicializa
 updateUI();
