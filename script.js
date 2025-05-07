@@ -28,8 +28,11 @@ const SUPABASE_ANON    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
     btnSubTrader.disabled = btnSubEnterprise.disabled = true;
     const { data:{ session } } = await supabaseClient.auth.getSession();
     // 0) debug
-    console.log("DEBUG session", session);
-    console.log("DEBUG token ", session?.access_token);
+    console.log("→ session:", session);
+    console.log("→ HEADERS sent:", {
+      apikey: session ? session.provider_token : null,
+      Authorization: session ? `Bearer ${session.access_token}` : null
+    });
     // 0) debug
     if (!session) {
       alert("Faça login antes!");
