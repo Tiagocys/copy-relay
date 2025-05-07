@@ -195,71 +195,98 @@ const SUPABASE_ANON    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
     btnGenFree.disabled = false;
   };
   
-  
-
   // 10) Update UI
   async function updateUI() {
-    const { data:{ session } } = await supabaseClient.auth.getSession();
+    const { data: { session } } = await supabaseClient.auth.getSession();
     if (!session) {
+      // não logado
       btnLogin.hidden  = false;
       btnSignup.hidden = false;
       btnLogout.hidden = true;
       app.hidden       = true;
       return;
     }
-    // está logado
+
+    // usuário logado
     btnLogin.hidden  = true;
     btnSignup.hidden = true;
     btnLogout.hidden = false;
     app.hidden       = false;
 
     const userId = session.user.id;
-    // 1) exibe sempre a seção de assinatura
-    subSec.hidden = false;
 
-    // paga?
-    let { data:lics } = await supabaseClient
-      .from("licenses")
-      .select("key,plan")
-      .eq("user_id", userId)
-      .eq("plan", "TRADER");
-
+    // 1) seção de subscrições sempre visível
+    subSec.hidden  = false;
     freeSec.hidden = false;
-    const hasPaid  = lics.length > 0;
-    paidSec.hidden = !hasPaid;
+
+    // 2) busca licenças TRADER e ENTERPRISE
+    let { data: lics } = await supabaseClient
+      .from("licenses")
+      .select("key,plan,status")
+      .eq("user_id", userId)
+      .in("plan", ["TRADER", "ENTERPRISE"]);
+
+    const hasTrader = lics.some(l => l.plan === "TRADER");
+    const hasEnt    = lics.some(l => l.plan === "ENTERPRISE");
+    const hasPaid   = hasTrader || hasEnt;
+
+    // 3) mostrar/ocultar botões de assinatura
+    btnSubTrader.hidden     = hasTrader || hasEnt;
+    btnSubEnterprise.hidden = hasEnt;
+
+    // 4) seção paga e botão cancel
+    paidSec.hidden      = !hasPaid;
     btnCancelSub.hidden = !hasPaid;
 
-
     if (hasPaid) {
-      const lic = lics[0];
+      // escolhe o plano ativo (prioriza Enterprise)
+      const activePlan = hasEnt ? "ENTERPRISE" : "TRADER";
+      const lic        = lics.find(l => l.plan === activePlan);
+
+      // exibe a MasterKey
       elPaidKey.textContent = lic.key;
-      let { data:accts } = await supabaseClient
+
+      // lista as contas
+      let { data: accts } = await supabaseClient
         .from("accounts")
         .select("login")
         .eq("license_key", lic.key);
       listAccts.innerHTML = accts.map(a => `<li>${a.login}</li>`).join("");
+
+      // adicionar nova conta
       btnAdd.onclick = async () => {
         const login = Number(inpNew.value);
         if (!login) return alert("Informe um número válido");
-        await supabaseClient.from("accounts").insert({ license_key: lic.key, login });
+        await supabaseClient
+          .from("accounts")
+          .insert({ license_key: lic.key, login });
         updateUI();
       };
+
+      // agendar cancelamento
       btnCancelSub.onclick = async () => {
-        if (!confirm("Deseja cancelar sua assinatura?")) return;
-        const { data:{ session } } = await supabaseClient.auth.getSession();
+        if (!confirm(
+          "Tem certeza de que deseja cancelar sua assinatura?\n" +
+          "Você manterá acesso até o fim do período atual, mas não haverá renovações futuras."
+        )) return;
+        btnCancelSub.disabled = true;
+        const { data: { session } } = await supabaseClient.auth.getSession();
         const r = await fetch(`${RELAY_BASE}/cancel-subscription`, {
           method: "POST",
-          headers: {
-            "Authorization": `Bearer ${session.access_token}`
-          }
+          headers: { "Authorization": `Bearer ${session.access_token}` }
         });
-        if (!r.ok) return alert("Erro ao cancelar: "+await r.text());
-        alert("Assinatura cancelada!");
+        if (!r.ok) {
+          alert("Erro ao agendar cancelamento: " + await r.text());
+          btnCancelSub.disabled = false;
+          return;
+        }
+        alert("Cancelamento agendado! Você manterá acesso até o final do período atual.");
         updateUI();
       };
-      
     }
   }
+
+
 
   // 11) Chama uma vez
   updateUI();
