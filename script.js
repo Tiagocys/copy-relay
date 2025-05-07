@@ -223,13 +223,15 @@ const SUPABASE_ANON    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
 
     // 2) busca licenças TRADER e ENTERPRISE
     let { data: lics } = await supabaseClient
-      .from("licenses")
-      .select("key,plan,status")
-      .eq("user_id", userId)
-      .in("plan", ["TRADER", "ENTERPRISE"]);
+    .from("licenses")
+    .select("key,plan,status")
+    .eq("user_id", userId)
+    .in("plan", ["TRADER","ENTERPRISE"]);
 
-    const hasTrader = lics.some(l => l.plan === "TRADER");
-    const hasEnt    = lics.some(l => l.plan === "ENTERPRISE");
+    // só considera ativas
+    const activeLicenses = lics.filter(l => l.status === "active");
+    const hasTrader = activeLicenses.some(l => l.plan === "TRADER");
+    const hasEnt    = activeLicenses.some(l => l.plan === "ENTERPRISE");
     const hasPaid   = hasTrader || hasEnt;
 
     // 3) mostrar/ocultar botões de assinatura
@@ -243,7 +245,8 @@ const SUPABASE_ANON    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
     if (hasPaid) {
       // escolhe o plano ativo (prioriza Enterprise)
       const activePlan = hasEnt ? "ENTERPRISE" : "TRADER";
-      const lic        = lics.find(l => l.plan === activePlan);
+      const lic        = activeLicenses.find(l => l.plan === activePlan);
+      elPaidKey.textContent = lic.key;
 
       // exibe a MasterKey
       elPaidKey.textContent = lic.key;
@@ -268,21 +271,20 @@ const SUPABASE_ANON    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
       // agendar cancelamento
       btnCancelSub.onclick = async () => {
         if (!confirm(
-          "Tem certeza de que deseja cancelar sua assinatura?\n" +
-          "Você manterá acesso até o fim do período atual, mas não haverá renovações futuras."
+          "Tem certeza? Essa ação encerrará imediatamente sua assinatura e marcará sua licença como cancelada."
         )) return;
         btnCancelSub.disabled = true;
-        const { data: { session } } = await supabaseClient.auth.getSession();
+        const { data:{ session } } = await supabaseClient.auth.getSession();
         const r = await fetch(`${RELAY_BASE}/cancel-subscription`, {
           method: "POST",
           headers: { "Authorization": `Bearer ${session.access_token}` }
         });
         if (!r.ok) {
-          alert("Erro ao agendar cancelamento: " + await r.text());
+          alert("Erro ao cancelar: " + await r.text());
           btnCancelSub.disabled = false;
           return;
         }
-        alert("Cancelamento agendado! Você manterá acesso até o final do período atual.");
+        alert("Assinatura cancelada!");
         updateUI();
       };
     }
