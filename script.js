@@ -21,7 +21,7 @@ const SUPABASE_ANON    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
   );
 
   // logo após criar supabaseClient…
-  const stripe = Stripe("pk_live_51RLNd8EpJa8F4C8dUUkGxpsQ3caxFlRdOXTQqhBTchy4xwr9aKErT97Nr9bdwVmyvGYNpKCIMqFjV3kwu3f9W45B00yE6sLqXs");  // sua chave publicável
+  const stripe = Stripe("pk_test_51RLNd8EpJa8F4C8dyp805k62CIYzqNAFVtEYZN0fWSm7lxSqPxVzJN9M70KS6ppuxg36XXW85FC7mSseEKix5WJR00Xqg6uAwo");  // sua chave publicável
 
   // função genérica
   async function criarCheckout(plan) {
@@ -82,10 +82,12 @@ const SUPABASE_ANON    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
   const listAccts = document.getElementById("accounts-list");
   const inpNew    = document.getElementById("new-login");
   const btnAdd    = document.getElementById("btn-add-login");
-
+  
   const subSec          = document.getElementById("sub-section");
   const btnSubTrader    = document.getElementById("btn-sub-trader");
   const btnSubEnterprise= document.getElementById("btn-sub-enterprise");
+  const btnCancelSub = document.getElementById("btn-cancel-sub");
+
   
   // associações
   btnSubTrader.onclick     = () => criarCheckout("TRADER");
@@ -225,6 +227,8 @@ const SUPABASE_ANON    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
     freeSec.hidden = false;
     const hasPaid  = lics.length > 0;
     paidSec.hidden = !hasPaid;
+    btnCancelSub.hidden = !hasPaid;
+
 
     if (hasPaid) {
       const lic = lics[0];
@@ -240,6 +244,20 @@ const SUPABASE_ANON    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
         await supabaseClient.from("accounts").insert({ license_key: lic.key, login });
         updateUI();
       };
+      btnCancelSub.onclick = async () => {
+        if (!confirm("Deseja cancelar sua assinatura?")) return;
+        const { data:{ session } } = await supabaseClient.auth.getSession();
+        const r = await fetch(`${RELAY_BASE}/cancel-subscription`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${session.access_token}`
+          }
+        });
+        if (!r.ok) return alert("Erro ao cancelar: "+await r.text());
+        alert("Assinatura cancelada!");
+        updateUI();
+      };
+      
     }
   }
 
