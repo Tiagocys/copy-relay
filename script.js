@@ -195,69 +195,71 @@ const SUPABASE_ANON    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
     btnGenFree.disabled = false;
   };
   
+  
+
   // 10) Update UI
   async function updateUI() {
     const { data:{ session } } = await supabaseClient.auth.getSession();
     if (!session) {
-      // … UI de não-logado …
+      btnLogin.hidden  = false;
+      btnSignup.hidden = false;
+      btnLogout.hidden = true;
+      app.hidden       = true;
       return;
     }
-  
-    // … UI de logado …
-  
+    // está logado
+    btnLogin.hidden  = true;
+    btnSignup.hidden = true;
+    btnLogout.hidden = false;
+    app.hidden       = false;
+
     const userId = session.user.id;
-    subSec.hidden  = false;
-    freeSec.hidden = false;
-  
-    // busca licenças TRADER e ENTERPRISE, mas só 'active'
-    let { data: lics } = await supabaseClient
+    // 1) exibe sempre a seção de assinatura
+    subSec.hidden = false;
+
+    // paga?
+    let { data:lics } = await supabaseClient
       .from("licenses")
-      .select("key,plan,status")
+      .select("key,plan")
       .eq("user_id", userId)
-      .in("plan", ["TRADER","ENTERPRISE"]);
-  
-    // só considera ativas
-    const activeLicenses = lics.filter(l => l.status === "active");
-    const hasTrader = activeLicenses.some(l => l.plan === "TRADER");
-    const hasEnt    = activeLicenses.some(l => l.plan === "ENTERPRISE");
-    const hasPaid   = hasTrader || hasEnt;
-  
-    // esconder botões de assinatura conforme ativo
-    btnSubTrader.hidden     = hasTrader || hasEnt;
-    btnSubEnterprise.hidden = hasEnt;
-  
-    paidSec.hidden      = !hasPaid;
+      .eq("plan", "TRADER");
+
+    freeSec.hidden = false;
+    const hasPaid  = lics.length > 0;
+    paidSec.hidden = !hasPaid;
     btnCancelSub.hidden = !hasPaid;
-  
+
+
     if (hasPaid) {
-      const activePlan = hasEnt ? "ENTERPRISE" : "TRADER";
-      const lic        = activeLicenses.find(l => l.plan === activePlan);
+      const lic = lics[0];
       elPaidKey.textContent = lic.key;
-  
-      // … listagem de contas, adicionar conta …
-  
-      // cancelamento
+      let { data:accts } = await supabaseClient
+        .from("accounts")
+        .select("login")
+        .eq("license_key", lic.key);
+      listAccts.innerHTML = accts.map(a => `<li>${a.login}</li>`).join("");
+      btnAdd.onclick = async () => {
+        const login = Number(inpNew.value);
+        if (!login) return alert("Informe um número válido");
+        await supabaseClient.from("accounts").insert({ license_key: lic.key, login });
+        updateUI();
+      };
       btnCancelSub.onclick = async () => {
-        if (!confirm(
-          "Tem certeza? Essa ação encerrará imediatamente sua assinatura e marcará sua licença como cancelada."
-        )) return;
-        btnCancelSub.disabled = true;
+        if (!confirm("Deseja cancelar sua assinatura?")) return;
         const { data:{ session } } = await supabaseClient.auth.getSession();
         const r = await fetch(`${RELAY_BASE}/cancel-subscription`, {
           method: "POST",
-          headers: { "Authorization": `Bearer ${session.access_token}` }
+          headers: {
+            "Authorization": `Bearer ${session.access_token}`
+          }
         });
-        if (!r.ok) {
-          alert("Erro ao cancelar: " + await r.text());
-          btnCancelSub.disabled = false;
-          return;
-        }
+        if (!r.ok) return alert("Erro ao cancelar: "+await r.text());
         alert("Assinatura cancelada!");
         updateUI();
       };
+      
     }
   }
-  
 
   // 11) Chama uma vez
   updateUI();
