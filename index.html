@@ -2,11 +2,14 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Copy Relay — Painel</title>
+  <title>Copy Relay – CopyTrade</title>
   <link rel="stylesheet" href="style.css">
-  <!-- Supabase JS -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.35.0/dist/umd/index.js"></script>
-  <script src="script.js"></script>
+  
+  <!-- 1) Bundle UMD do Supabase v2 — garante window.supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <!-- 2) Seu script, mas carregado só após o DOM (defer) -->
+  <script src="script.js" defer></script>
+
 </head>
 <body>
   <header>
@@ -51,6 +54,10 @@
     <section id="paid-section" hidden>
       <h2>Minha Licença</h2>
       <p>MasterKey: <code id="paid-key"></code></p>
+      <h2>Assinatura</h2>
+      <button id="btn-sub-trader">Assinar Trader: $20/mês (até 10 contas)</button>
+      <button id="btn-sub-enterprise">Assinar Enterprise: $100/mês (contas ilimitadas)</button>
+      <!-- restante do seu painel -->
       <h3>Contas Autorizadas</h3>
       <ul id="accounts-list"></ul>
       <input type="number" id="new-login" placeholder="Número da conta MT4">
@@ -58,6 +65,8 @@
     </section>
   </main>
 
+  <!-- Stripe.js -->
+<script src="https://js.stripe.com/v3/"></script>
 
 </body>
 </html>
