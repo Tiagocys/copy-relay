@@ -21,11 +21,7 @@ const SUPABASE_ANON    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
   );
 
   // logo após criar supabaseClient…
-  const stripe = Stripe("pk_live_XXXXXXXX");  // sua chave publicável
-
-  // botões
-  const btnSubTrader   = document.getElementById("btn-sub-trader");
-  const btnSubEnterprise = document.getElementById("btn-sub-enterprise");
+  const stripe = Stripe("pk_live_51RLNd8EpJa8F4C8dUUkGxpsQ3caxFlRdOXTQqhBTchy4xwr9aKErT97Nr9bdwVmyvGYNpKCIMqFjV3kwu3f9W45B00yE6sLqXs");  // sua chave publicável
 
   // função genérica
   async function criarCheckout(plan) {
@@ -60,10 +56,6 @@ const SUPABASE_ANON    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
     }
   }
 
-  // associações
-  btnSubTrader.onclick     = () => criarCheckout("TRADER");
-  btnSubEnterprise.onclick = () => criarCheckout("ENTERPRISE");
-
   // 3) Referências DOM
   const btnLogin     = document.getElementById("btn-login");
   const btnSignup    = document.getElementById("btn-signup");
@@ -83,6 +75,14 @@ const SUPABASE_ANON    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
   const listAccts = document.getElementById("accounts-list");
   const inpNew    = document.getElementById("new-login");
   const btnAdd    = document.getElementById("btn-add-login");
+
+  const subSec          = document.getElementById("sub-section");
+  const btnSubTrader    = document.getElementById("btn-sub-trader");
+  const btnSubEnterprise= document.getElementById("btn-sub-enterprise");
+  
+  // associações
+  btnSubTrader.onclick     = () => criarCheckout("TRADER");
+  btnSubEnterprise.onclick = () => criarCheckout("ENTERPRISE");
 
   // 4) Abre/fecha modais
   btnLogin.onclick  = () => modalLogin.classList.remove("hidden");
@@ -205,6 +205,8 @@ const SUPABASE_ANON    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
     app.hidden       = false;
 
     const userId = session.user.id;
+    // 1) exibe sempre a seção de assinatura
+    subSec.hidden = false;
 
     // paga?
     let { data:lics } = await supabaseClient
