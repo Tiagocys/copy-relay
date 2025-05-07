@@ -286,8 +286,6 @@ const SUPABASE_ANON    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
     }
   }
 
-
-
   // 11) Chama uma vez
   updateUI();
 });
