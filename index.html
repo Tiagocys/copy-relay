@@ -3,6 +3,182 @@
 <head>
   <meta charset="UTF-8">
   <title>Copy Relay – CopyTrade</title>
+   <!-- Google Font for a Futuristic Look -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet" />
+
+    <style>
+            :root {
+        /* Neon palette */
+        --neon-red: #ff004f;
+        --neon-blue: #00b4ff;
+        --btn-gradient: linear-gradient(135deg, var(--neon-red) 0%, var(--neon-blue) 100%);
+        --dark-bg: #080b1a;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: "Orbitron", sans-serif;
+        background: var(--dark-bg);
+        color: #fff;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* Navbar */
+      nav {
+        width: 100%;
+        padding: 1rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(6px);
+      }
+
+      .logo {
+        font-size: 1.8rem;
+        font-weight: 700;
+        letter-spacing: 2px;
+        background: var(--btn-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 1rem;
+      }
+
+      .nav-links a {
+        position: relative;
+        padding: 0.5rem 1.2rem;
+        color: #fff;
+        text-decoration: none;
+        font-size: 0.9rem;
+        letter-spacing: 1px;
+      }
+
+      .nav-links a::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border: 2px solid currentColor;
+        border-radius: 6px;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      .nav-links a:hover::after {
+        opacity: 1;
+        box-shadow: 0 0 8px var(--neon-blue);
+        border-color: var(--neon-blue);
+      }
+
+      /* Header / Hero */
+      header.hero {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 6rem 2rem;
+        background: url("img/bg.png") center/cover no-repeat fixed;
+        position: relative;
+      }
+
+      /* dark overlay to improve legibility */
+      header.hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        backdrop-filter: brightness(0.5);
+      }
+
+      /* text container sits above overlay */
+      .hero-content {
+        position: relative;
+        z-index: 1;
+        max-width: 1000px;
+      }
+
+      .hero-content h1 {
+        font-size: clamp(2.5rem, 6vw, 4.5rem);
+        margin-bottom: 1.5rem;
+        background: var(--btn-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-shadow: 0 0 15px var(--neon-blue);
+      }
+
+      .hero-content p {
+        font-size: clamp(1rem, 2vw, 1.4rem);
+        margin-bottom: 2.5rem;
+        line-height: 1.5;
+      }
+
+      .btn-primary {
+        display: inline-block;
+        padding: 0.9rem 2.2rem;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #fff;
+        text-decoration: none;
+        background: var(--btn-gradient);
+        border-radius: 50px;
+        box-shadow: 0 0 12px var(--neon-red), 0 0 24px var(--neon-blue);
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 0 18px var(--neon-red), 0 0 36px var(--neon-blue);
+      }
+
+      /* MT4 Section */
+      .mt4-section {
+        background: #fff;
+        color: var(--dark-bg);
+        text-align: center;
+        padding: 4rem 2rem;
+      }
+
+      .mt4-section h2 {
+        font-size: clamp(2rem, 5vw, 3.5rem);
+        margin-bottom: 1rem;
+        font-weight: 700;
+      }
+
+      .mt4-section p {
+        font-size: clamp(0.95rem, 1.8vw, 1.2rem);
+        max-width: 800px;
+        margin: 0 auto 2rem;
+        line-height: 1.5;
+      }
+
+      .mt4-section video {
+        width: 100%;
+        max-width: 1280px;
+        border-radius: 12px;
+        pointer-events: none;
+      }
+
+      /* Responsive tweaks */
+      @media (max-width: 600px) {
+        nav {
+          padding: 0.8rem 1.2rem;
+        }
+        .nav-links a {
+          padding: 0.4rem 0.9rem;
+          font-size: 0.8rem;
+        }
+      }
+    </style>
   <link rel="stylesheet" href="style.css">
   
   <!-- 1) Bundle UMD do Supabase v2 — garante window.supabase -->
@@ -12,13 +188,30 @@
 
 </head>
 <body>
-  <header>
-    <h1>Copy Relay</h1>
-    <!-- Botões de entrar/cadastrar -->
-    <button id="btn-login">Entrar</button>
-    <button id="btn-signup">Cadastrar</button>
-    <button id="btn-logout" hidden>Sair</button>
-  </header>
+  <!-- Navbar -->
+    <nav>
+      <div class="logo"><img href="img/logo.png"></div>
+      <div class="nav-links">
+        <p id="btn-login">Login</p>
+        <p id="btn-signup">Registro</p>
+        <p id="btn-logout">Sair</p>
+      </div>
+    </nav>
+    <!-- Header / Hero Section -->
+    <header class="hero">
+      <div class="hero-content">
+        <h1>Copy trader para MT4</h1>
+        <p>A tecnologia que replica estratégias vencedoras em tempo real e potencializa seus resultados no mercado financeiro.</p>
+        <button class="btn-primary" id="btn-signup">Baixe gratuitamente</button>
+      </div>
+    </header>
+    <!-- MT4 Highlight Section -->
+    <section class="mt4-section">
+      <h2>Essencial para trading</h2>
+      <p>Milhões de traders usam a plataforma MetaTrader 4 para trading e análise do mercado financeiro.</p>
+      <video src="img/mt4_preview.mp4" autoplay muted loop playsinline oncontextmenu="return false"></video>
+    </section>
+
   
   <!-- POP-UP LOGIN -->
   <div id="modal-login" class="modal hidden">
