@@ -221,13 +221,12 @@ async function updateUI() {
   subSec.hidden   = false;
   freeSec.hidden  = false;
 
-  // 3) BUSCA LICENÇA PAGA (TRADER ou ENT)
-  let { data:lics } = await supabaseClient
+  // 3) Busca licenças TRADER e ENTERPRISE (qualquer status)
+  let { data: lics } = await supabaseClient
     .from("licenses")
-    .select("key,plan")
+    .select("key,plan,status")
     .eq("user_id", userId)
-    .eq("plan", "TRADER");  // aqui já só TRADER
-
+    .in("plan", ["TRADER","ENTERPRISE"]);
 
   // 4) Filtra somente as licenças ativas
   const active = lics.filter(l => l.status === "active");
@@ -244,66 +243,57 @@ async function updateUI() {
   btnCancelSub.hidden = !hasPaid;
 
   // 7) Exibe MasterKey e contas se houver pagamento ativo
-  if (!hasPaid) {
-    paidSec.hidden = true;
-  } else {
-    paidSec.hidden = false;
-    const lic = lics[0];
+  if (hasPaid) {
+    // prioriza Enterprise se existir
+    const lic = active.find(l => l.plan === "ENTERPRISE")
+              || active.find(l => l.plan === "TRADER");
     elPaidKey.textContent = lic.key;
 
-    // pega contas existentes (0 ou 1)
+    // lista contas autorizadas
     let { data: accts } = await supabaseClient
       .from("accounts")
       .select("login")
       .eq("license_key", lic.key);
+    listAccts.innerHTML = accts.map(a => `<li>${a.login}</li>`).join("");
 
-    listAccts.innerHTML = "";
-    if (accts.length === 0) {
-      // nenhum cadastrado: mostra input + botão add
-      inpNew.hidden = false;
-      btnAdd.textContent = "Cadastrar Conta Slave";
-      btnAdd.onclick = async () => {
-        const login = Number(inpNew.value);
-        if (!login) return alert("Informe um número válido");
-        const { error } = await supabaseClient
-          .from("accounts")
-          .insert({ license_key: lic.key, login });
-        if (error) return console.error(error);
-        updateUI();
-      };
-    } else {
-      // já existe 1: mostra apenas o número + botão editar
-      inpNew.hidden = true;
-      const login = accts[0].login;
-      listAccts.innerHTML = `<li>Conta Slave: ${login}</li>`;
-      btnAdd.textContent = "Editar Conta";
-      btnAdd.onclick = () => {
-        // transforma em modo edição
-        listAccts.innerHTML = `
-          <input id="edit-login" type="number" placeholder="${login}" />
-        `;
-        btnAdd.textContent = "Salvar Alteração";
-        document.getElementById("edit-login").focus();
-        btnAdd.onclick = async () => {
-          const newLogin = Number(document.getElementById("edit-login").value);
-          if (!newLogin) return alert("Número inválido");
-          // update no Supabase
-          const { error } = await supabaseClient
-            .from("accounts")
-            .update({ login: newLogin })
-            .eq("license_key", lic.key);
-          if (error) return console.error(error);
-          updateUI();
-        };
-      };
-    }
+    // adicionar conta
+    btnAdd.onclick = async () => {
+      const login = Number(inpNew.value);
+      if (!login) return alert("Informe um número válido");
+      await supabaseClient
+        .from("accounts")
+        .insert({ license_key: lic.key, login });
+      updateUI();
+    };
+
+    // cancelar assinatura
+    btnCancelSub.onclick = async () => {
+      if (!confirm(
+        "Tem certeza de que deseja cancelar sua assinatura?\n" +
+        "Isso encerrará imediatamente o plano e marcará sua licença como 'canceled'."
+      )) return;
+      btnCancelSub.disabled = true;
+      const { data:{ session } } = await supabaseClient.auth.getSession();
+      const r = await fetch(`${RELAY_BASE}/cancel-subscription`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${session.access_token}` }
+      });
+      if (!r.ok) {
+        alert("Erro ao cancelar: " + await r.text());
+        btnCancelSub.disabled = false;
+        return;
+      }
+      alert("Assinatura cancelada!");
+      updateUI();
+    };
+  } else {
+    // limpa caso não tenha licença ativa
+    elPaidKey.textContent = "";
+    listAccts.innerHTML   = "";
   }
-
 }
 
 // no carregamento inicial
 updateUI();
-
-
 
 });
