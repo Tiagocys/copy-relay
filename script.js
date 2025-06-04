@@ -66,6 +66,7 @@ const SUPABASE_ANON    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
   // 3) Referências DOM
   const btnLogin     = document.getElementById("btn-login");
   const btnSignup    = document.getElementById("btn-signup");
+  const btnSignupHero= document.getElementById("btn-signup-hero");
   const btnLogout    = document.getElementById("btn-logout");
   const modalLogin   = document.getElementById("modal-login");
   const modalSignup  = document.getElementById("modal-signup");
@@ -96,6 +97,9 @@ const SUPABASE_ANON    = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
   // 4) Abre/fecha modais
   btnLogin.onclick  = () => modalLogin.classList.remove("hidden");
   btnSignup.onclick = () => modalSignup.classList.remove("hidden");
+  if (btnSignupHero) {
+    btnSignupHero.onclick = () => modalSignup.classList.remove("hidden");
+  }
   document.querySelectorAll(".close-modal").forEach(b =>
     b.onclick = () => {
       modalLogin .classList.add("hidden");
